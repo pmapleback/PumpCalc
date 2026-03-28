@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fire Pump Calc</title>
+    <style>
+        body { background: #121212; color: white; font-family: sans-serif; padding: 20px; touch-action: manipulation; }
+        .card { background: #1e1e1e; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .pdp-val { font-size: 56px; font-weight: 900; margin: 10px 0; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid #333; padding-top: 10px; }
+        .label { color: #888; font-size: 12px; text-transform: uppercase; }
+        .val { font-size: 22px; font-weight: bold; }
+        .btn-group { display: flex; gap: 10px; align-items: center; margin: 15px 0; }
+        button { background: #333; color: white; border: none; padding: 15px; border-radius: 8px; flex: 1; font-size: 20px; font-weight: bold; cursor: pointer; }
+        button:active { background: #555; }
+        .size-btn { font-size: 14px; padding: 10px; }
+        .active { background: #d32f2f !important; }
+        .yellow { color: #ffeb3b; }
+        .cyan { color: #00bcd4; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="label">Pump Discharge (PDP)</div>
+        <div class="pdp-val" id="pdp">548 kPa</div>
+        <div class="grid">
+            <div><div class="label">FLoss</div><div class="val yellow" id="floss">48</div></div>
+            <div><div class="label">Dist</div><div class="val cyan" id="dist">30m</div></div>
+        </div>
+    </div>
+
+    <div class="label">Flow Rate (LPM)</div>
+    <div class="btn-group">
+        <button onclick="changeFlow(-1)">-</button>
+        <div style="flex: 2; text-align: center; font-size: 24px; font-weight: bold; color: #ffeb3b;" id="lpm-display">500 LPM</div>
+        <button onclick="changeFlow(1)">+</button>
+    </div>
+
+    <div class="label">Hose Lengths (30m ea)</div>
+    <div class="btn-group">
+        <button onclick="changeDist(-1)">-</button>
+        <div style="flex: 2; text-align: center; font-size: 24px; font-weight: bold;" id="dist-display">1 Lth</div>
+        <button onclick="changeDist(1)">+</button>
+    </div>
+
+    <div class="label">Hose Size</div>
+    <div class="btn-group" style="flex-wrap: wrap;">
+        <button class="size-btn active" onclick="setSize('38mm', this)">38mm</button>
+        <button class="size-btn" onclick="setSize('25mm', this)">25mm</button>
+        <button class="size-btn" onclick="setSize('65mm', this)">65mm</button>
+        <button class="size-btn" onclick="setSize('Twin 65', this)">Twin 65</button>
+        <button class="size-btn" onclick="setSize('100mm', this)">100mm</button>
+    </div>
+
+    <div class="label">Nozzle Pressure (kPa)</div>
+    <div class="btn-group">
+        <button class="active" onclick="setNozzle(500, this)">500</button>
+        <button onclick="setNozzle(700, this)">700</button>
+    </div>
+
+    <script>
+        let flowSteps = [100, 250, 400, 500, 750, 900, 1000, 1200, 1500];
+        let flowIdx = 3;
+        let lengths = 1;
+        let size = '38mm';
+        let nozzle = 500;
+
+        const coeffs = { '25mm': 200, '38mm': 50, '65mm': 3, 'Twin 65': 3, '100mm': 0.3 };
+
+        function calculate() {
+            let lpm = flowSteps[flowIdx];
+            let C = coeffs[size];
+            let Q = lpm / 100;
+            if (size === 'Twin 65') Q = Q / 2;
+            
+            let L = (lengths * 30) / 100;
+            let fl = C * Math.pow(Q, 2) * L;
+            let pdp = fl + nozzle;
+
+            document.getElementById('pdp').innerText = Math.round(pdp) + " kPa";
+            document.getElementById('floss').innerText = Math.round(fl);
+            document.getElementById('dist').innerText = (lengths * 30) + "m";
+            document.getElementById('lpm-display').innerText = lpm + " LPM";
+            document.getElementById('dist-display').innerText = lengths + " Lth";
+        }
+
+        function changeFlow(dir) {
+            flowIdx = Math.max(0, Math.min(flowSteps.length - 1, flowIdx + dir));
+            calculate();
+        }
+
+        function changeDist(dir) {
+            lengths = Math.max(1, Math.min(20, lengths + dir));
+            calculate();
+        }
+
+        function setSize(s, btn) {
+            size = s;
+            updateButtons(btn);
+            calculate();
+        }
+
+        function setNozzle(n, btn) {
+            nozzle = n;
+            updateButtons(btn);
+            calculate();
+        }
+
+        function updateButtons(activeBtn) {
+            Array.from(activeBtn.parentNode.children).forEach(b => b.classList.remove('active'));
+            activeBtn.classList.add('active');
+        }
+
+        calculate();
+    </script>
+</body>
+</html>
