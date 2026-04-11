@@ -18,110 +18,118 @@
         .active { background: #d32f2f !important; }
         .yellow { color: #ffeb3b; }
         .cyan { color: #00bcd4; }
+        .green { color: #4caf50; }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <div class="label">Pump Discharge (PDP)</div>
-        <div class="pdp-val" id="pdp">548 kPa</div>
-        <div class="grid">
-            <div><div class="label">FLoss</div><div class="val yellow" id="floss">48</div></div>
-            <div><div class="label">Dist</div><div class="val cyan" id="dist">30m</div></div>
+<div class="card">
+    <div class="label">Pump Discharge (PDP)</div>
+    <div class="pdp-val" id="pdp">548 kPa</div>
+
+    <div class="grid">
+        <div><div class="label">FLoss</div><div class="val yellow" id="floss">48</div></div>
+        <div><div class="label">Dist</div><div class="val cyan" id="dist">30m</div></div>
+    </div>
+
+    <div class="grid" style="margin-top: 10px; border-top: 1px solid #333; padding-top: 10px;">
+        <div style="grid-column: span 2;">
+            <div class="label">Pump & Roll Speed</div>
+            <div class="val green" id="roll-speed">30.0 km/h</div>
         </div>
     </div>
+</div>
 
-    <div class="label">Flow Rate (LPM)</div>
-    <div class="btn-group">
-        <button onclick="changeFlow(-1)">-</button>
-        <div style="flex: 2; text-align: center; font-size: 24px; font-weight: bold; color: #ffeb3b;" id="lpm-display">500 LPM</div>
-        <button onclick="changeFlow(1)">+</button>
-    </div>
+<div class="label">Flow Rate (LPM)</div>
+<div class="btn-group">
+    <button onclick="changeFlow(-1)">-</button>
+    <div style="flex: 2; text-align: center; font-size: 24px; font-weight: bold; color: #ffeb3b;" id="lpm-display">500 LPM</div>
+    <button onclick="changeFlow(1)">+</button>
+</div>
 
-    <div class="label">Hose Lengths (30m ea)</div>
-    <div class="btn-group">
-        <button onclick="changeDist(-1)">-</button>
-        <div style="flex: 2; text-align: center; font-size: 24px; font-weight: bold;" id="dist-display">1 Lth</div>
-        <button onclick="changeDist(1)">+</button>
-    </div>
+<div class="label">Hose Lengths (30m ea)</div>
+<div class="btn-group">
+    <button onclick="changeDist(-1)">-</button>
+    <div style="flex: 2; text-align: center; font-size: 24px; font-weight: bold;" id="dist-display">1 Lth</div>
+    <button onclick="changeDist(1)">+</button>
+</div>
 
-    <div class="label">Hose Size</div>
-    <div class="btn-group" style="flex-wrap: wrap;">
-        <button class="size-btn active" onclick="setSize('38mm', this)">38mm</button>
-        <button class="size-btn" onclick="setSize('25mm', this)">25mm</button>
-        <button class="size-btn" onclick="setSize('65mm', this)">65mm</button>
-        <button class="size-btn" onclick="setSize('Twin 65', this)">Twin 65</button>
-        <button class="size-btn" onclick="setSize('100mm', this)">100mm</button>
-    </div>
+<div class="label">Hose Size</div>
+<div class="btn-group" style="flex-wrap: wrap;">
+    <button class="size-btn active" onclick="setSize('38mm', this)">38mm</button>
+    <button class="size-btn" onclick="setSize('25mm', this)">25mm</button>
+    <button class="size-btn" onclick="setSize('65mm', this)">65mm</button>
+    <button class="size-btn" onclick="setSize('Twin 65', this)">Twin 65</button>
+    <button class="size-btn" onclick="setSize('100mm', this)">100mm</button>
+</div>
 
-    <div class="label">Nozzle Pressure (kPa)</div>
-    <div class="btn-group">
-        <button class="active" onclick="setNozzle(500, this)">500</button>
-        <button onclick="setNozzle(700, this)">700</button>
-    </div>
+<div class="label">Nozzle Pressure (kPa)</div>
+<div class="btn-group">
+    <button class="active" onclick="setNozzle(500, this)">500</button>
+    <button onclick="setNozzle(700, this)">700</button>
+</div>
 
-    <script>
-       let flowSteps = [50, 100, 115, 150, 230, 250, 360, 475, 500, 550, 750, 900, 950, 1000, 1500, 2000];
-        let flowIdx = 3;
-        let lengths = 1;
-        let size = '38mm';
-        let nozzle = 500;
+<script>
+    let flowSteps = [50, 100, 115, 150, 230, 250, 360, 475, 500, 550, 750, 900, 950, 1000, 1500, 2000];
+    let flowIdx = 8; // Starting at 500 LPM
+    let lengths = 1;
+    let size = '38mm';
+    let nozzle = 500;
 
-        const coeffs = { 
-    '25mm': 200, 
-    '38mm': 50, 
-    '65mm': 3, 
-    'Twin 65': 3, // Remember: we use 3 here because we halve the flow in the math
-    '100mm': 0.3 
-};
-        function calculate() {
-            let lpm = flowSteps[flowIdx];
-            let C = coeffs[size];
-            let Q = lpm / 100;
-            if (size === 'Twin 65') Q = Q / 2;
-            
-            let L = (lengths * 30) / 100;
-            let fl = C * Math.pow(Q, 2) * L;
-            let pdp = fl + nozzle;
+    const coeffs = { '25mm': 200, '38mm': 50, '65mm': 3, 'Twin 65': 3, '100mm': 0.3 };
 
-            document.getElementById('pdp').innerText = Math.round(pdp) + " kPa";
-            document.getElementById('floss').innerText = Math.round(fl);
-            document.getElementById('dist').innerText = (lengths * 30) + "m";
-            document.getElementById('lpm-display').innerText = lpm + " LPM";
-            document.getElementById('dist-display').innerText = lengths + " Lth";
-        }
+    function calculate() {
+        let lpm = flowSteps[flowIdx];
+        let C = coeffs[size];
+        let Q = lpm / 100;
+        if (size === 'Twin 65') Q = Q / 2;
 
-        function changeFlow(dir) {
-            flowIdx = Math.max(0, Math.min(flowSteps.length - 1, flowIdx + dir));
-            calculate();
-        }
+        let L = (lengths * 30) / 100;
+        let fl = C * Math.pow(Q, 2) * L;
+        let pdp = fl + nozzle;
 
-        function changeDist(dir) {
-            lengths = Math.max(1, Math.min(20, lengths + dir));
-            calculate();
-        }
+        // Pump and Roll Speed Calculation
+        let rollSpeed = lpm * 0.06;
 
-        function setSize(s, btn) {
-            size = s;
-            updateButtons(btn);
-            calculate();
-        }
+        document.getElementById('pdp').innerText = Math.round(pdp) + " kPa";
+        document.getElementById('floss').innerText = Math.round(fl);
+        document.getElementById('dist').innerText = (lengths * 30) + "m";
+        document.getElementById('lpm-display').innerText = lpm + " LPM";
+        document.getElementById('dist-display').innerText = lengths + " Lth";
+        document.getElementById('roll-speed').innerText = rollSpeed.toFixed(1) + " km/h";
+    }
 
-        function setNozzle(n, btn) {
-            nozzle = n;
-            updateButtons(btn);
-            calculate();
-        }
-
-        function updateButtons(activeBtn) {
-            Array.from(activeBtn.parentNode.children).forEach(b => b.classList.remove('active'));
-            activeBtn.classList.add('active');
-        }
-
+    function changeFlow(dir) {
+        flowIdx = Math.max(0, Math.min(flowSteps.length - 1, flowIdx + dir));
         calculate();
-    </script>
+    }
+
+    function changeDist(dir) {
+        lengths = Math.max(1, Math.min(20, lengths + dir));
+        calculate();
+    }
+
+    function setSize(s, btn) {
+        size = s;
+        updateButtons(btn);
+        calculate();
+    }
+
+    function setNozzle(n, btn) {
+        nozzle = n;
+        updateButtons(btn);
+        calculate();
+    }
+
+    function updateButtons(activeBtn) {
+        Array.from(activeBtn.parentNode.children).forEach(b => b.classList.remove('active'));
+        activeBtn.classList.add('active');
+    }
+
+    calculate();
+</script>
 <div style="text-align: center; color: #444; font-size: 10px; margin-top: 30px;">
-    v1.3 - Updated Flow Steps
+    v1.4 - Added Pump & Roll Speed
 </div>
 </body>
 </html>
